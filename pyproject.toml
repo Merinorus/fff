@@ -1,0 +1,86 @@
+[tool.pytest.ini_options]
+# Allow pytest to use custom markers
+addopts = '--strict-markers'
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+  # Exclude vendor directory
+  | vendor
+)
+'''
+
+[tool.isort]
+skip_glob = ["**/.env*", "**/env/*", "**/.venv/*", "**/docs/*"]
+profile = "black"
+
+[tool.bumpver]
+# Do not change this manually! Use the "bumpver" command.
+current_version = "0.2022.09.22"
+# Just before a major release, increase the first number manually so it's tagged at CI
+version_pattern = "0.YYYY.0M.0D[.PATCH][-TAG]"
+commit_message = "bump version to {new_version}"
+commit = false
+tag = false
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+]
+"fff/__init__.py" = [
+    '__version__ = "{version}"'
+]
+
+[tool.bandit]
+targets = ["fff"]
+exclude_dirs = ["tests"]
+
+[tool.liccheck]
+authorized_licenses = [
+    "bsd",
+    "new bsd",
+    "bsd license",
+    "new bsd license",
+    "simplified bsd",
+    "3-Clause BSD",
+    "apache",
+    "apache 2.0",
+    "apache license 2.0",
+    "apache software license",
+    "apache software",
+    "GNU AFFERO GPL 3.0",
+    "gnu lgpl",
+    "GNU Library or Lesser General Public License (LGPL)",
+    "lgpl with exceptions or zpl",
+    "isc license",
+    "isc license (iscl)",
+    "mit",
+    "mit license",
+    "mozilla public license 2.0 (mpl 2.0)",
+    "python software foundation license",
+    "python software foundation",
+    "zpl 2.1",
+    # GPL licenses. Can be used as long as our software is open-source with GPL license as well.
+    'GNU General Public License (GPL)',
+    "gpl v3",
+    'Historical Permission Notice and Disclaimer (HPND)'  # deprecated
+]
+unauthorized_licenses = [
+
+]

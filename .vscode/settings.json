@@ -1,0 +1,21 @@
+{
+    "python.formatting.provider": "black",
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.linting.banditEnabled": true,
+    "python.linting.banditArgs": [
+        "-c",
+        "pyproject.toml",
+        "--severity=medium",
+        "r",
+        "."
+    ],
+    "python.linting.flake8Path": "setup.cfg",
+    "[python]": {
+        "editor.rulers": [
+            88
+        ]
+    },
+    "editor.formatOnSave": true
+}

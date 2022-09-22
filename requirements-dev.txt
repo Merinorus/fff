@@ -1,0 +1,10 @@
+### Requirements for developer ###
+
+# Include all requirements to run the app.
+
+-r requirements.txt
+bandit==1.7.4
+black==22.8.0
+flake8==5.0.4
+mypy==0.971
+pre-commit==2.20.0
