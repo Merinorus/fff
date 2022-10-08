@@ -1,4 +1,4 @@
 ### Requirements for running the application ###
 
 loguru==0.6.0
-selenium==4.4.3
+selenium==4.5.0

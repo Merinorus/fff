@@ -79,4 +79,5 @@ repos:
       - id: liccheck
         name: Verification of package license issues (liccheck)
         args: ["-r", "requirements.txt"]
+        language: system
         # stages: [push]
