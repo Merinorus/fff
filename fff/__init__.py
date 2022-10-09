@@ -1,2 +1,2 @@
 """Flexible Flight Finder"""
-__version__ = "0.2022.09.22"
+__version__ = "0.2022.10.09"
