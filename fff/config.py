@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     # Comparator website URL
     WEBSITE_URL: str = "https://www.kayak.fr"
+    NUMBER_OF_RESULTS: NonNegativeInt = 3  # How many flight search results to keep
 
     # Travel preferences
     FROM_AIRPORT: str = "PAR"

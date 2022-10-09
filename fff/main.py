@@ -8,7 +8,7 @@ from fff.utils.logging import logger
 def main():
     with logger.catch():
         bot = Bot()
-        bot.start()
+        bot.search()
 
 
 if __name__ == "__main__":
