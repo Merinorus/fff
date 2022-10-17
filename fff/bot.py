@@ -4,7 +4,10 @@ from urllib.parse import urljoin
 from price_parser import Price
 from pydantic import BaseModel, HttpUrl
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
@@ -110,6 +113,14 @@ class Bot:
         """
         self.driver.execute_script("arguments[0].click();", element)
 
+    def _remove(self, element: WebElement) -> None:
+        """Remove f web element from the DOM.
+
+        Args:
+            element (WebElement): the web element to remove
+        """
+        self.driver.execute_script("arguments[0].remove();", element)
+
     def _click_outside(self):
         """Click on a blank area.
 
@@ -170,25 +181,29 @@ class Bot:
         flight_date_webelements = web_element.find_elements(
             By.XPATH, "//div[@class='price']"
         )
+        # logger.debug(f"{flight_date_webelements=}")
         flight_dates: List[FlightDateElement] = []
 
         for web_element in flight_date_webelements:
-            raw_price = web_element.text
-            # Make sure the departure date case is not empty
-            if raw_price:
-                # logger.debug(f"{raw_price=}")
-                price = Price.fromstring(raw_price)
-                if price.amount:
-                    # logger.debug(f"Price: {price}")
-                    flight_dates.append(
-                        FlightDateElement(
-                            web_element=web_element,
-                            price=price,
+            try:
+                raw_price = web_element.text
+                # Make sure the departure date case is not empty
+                if raw_price:
+                    # logger.debug(f"{raw_price=}")
+                    price = Price.fromstring(raw_price)
+                    if price.amount:
+                        # logger.debug(f"Price: {price}")
+                        flight_dates.append(
+                            FlightDateElement(
+                                web_element=web_element,
+                                price=price,
+                            )
                         )
-                    )
+            except StaleElementReferenceException as e:
+                logger.exception(e)
         # logger.debug(f"{flight_dates=}")
         flight_dates.sort(key=lambda x: x.price)
-        # logger.debug(f"{flight_dates=}")
+        logger.debug(f"{flight_dates=}")
         chosen_dates = flight_dates[0:nb_results]
         return chosen_dates
 
@@ -223,17 +238,21 @@ class Bot:
         )
 
     def get_best_flights(self, url: str, nb_results: int) -> List[FlightTrip]:
+        # Add a margin in case they are several dates with the same price
+        margin = 2
         departure_dates: List[FlightDateElement] = self._get_best_departure_dates(
-            url, nb_results
+            url, nb_results + margin
         )
         result: List[FlightTrip] = []
+        logger.debug(f"{departure_dates=}")
         for d in departure_dates:
             self._force_click(d.web_element)
             # Clicking on a departure date open a dialog content with return dates
             return_dialog = self.driver.find_element(
-                By.XPATH, "//div[contains(@class, 'returnView')]"
+                By.XPATH,
+                "//div[contains(@class, 'Flights-Results-FlexMonthView Flights-Results-FlexMonthReturnView returnView')]",
             )
-            return_dates = self._get_best_dates(return_dialog, nb_results)
+            return_dates = self._get_best_dates(return_dialog, nb_results + 1)
             logger.debug(f"{return_dates=}")
             # self.driver.implicitly_wait(1)
             for return_date in return_dates:
@@ -277,6 +296,8 @@ class Bot:
                 self._press_key(Keys.ESCAPE)
                 # self.driver.refresh()
                 # self._click_outside()
+            #
+            self._remove(return_dialog)
         # self.revert_default_timeout()
         return result
 
