@@ -13,9 +13,22 @@ class AirPort(BaseModel):
         else:
             return f"{self.code}"
 
+    @classmethod
+    def from_string(cls, airport_string: str) -> "AirPort":
+        """
+        Given text extracted from HTML elements, return
+        ``AirPort`` instance, which provides a clean airport symbol.
+        """
+        # Remove leading and trailing spaces
+        airport_string = airport_string.strip()
+        # Keep the 3 first letters and ensure they are all caps.
+        airport_string = airport_string[0:3].upper()
+        airport = AirPort(code=airport_string)
+        return airport
 
-class AirportRoundTrip(BaseModel):
-    """Airport round trip search parameters."""
+
+class AirportTrip(BaseModel):
+    """Airport trip search parameters."""
 
     from_airport: AirPort
     destination_airport: AirPort
