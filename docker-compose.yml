@@ -1,0 +1,6 @@
+services:
+  fff:
+    build: .
+    container_name: fff
+    env_file:
+      - .env
