@@ -1,4 +1,5 @@
 import html
+from datetime import date, datetime
 from time import sleep
 from typing import List, Union
 from urllib.parse import urljoin
@@ -18,60 +19,100 @@ from selenium.webdriver.support.ui import WebDriverWait
 from fff.config import settings
 from fff.schemas.airport import AirPort, AirportTrip
 from fff.schemas.baggage import BaggageList
+from fff.schemas.flight_duration import FlightDurationFilter
 from fff.schemas.flight_search import FlightSearchParameters
+from fff.schemas.layover import LayoverFilter
 from fff.schemas.passenger import PassengerList
 from fff.schemas.stop import MaxStopFilter
-from fff.utils.date import split_date_window
+from fff.utils.datetime import parse_date, split_date_window
 from fff.utils.logging import logger
 from fff.utils.progress_bar import progressbar_is_full
 
 
-def generate_urls() -> List[str]:
-    """Generate the list of URL to scrap
+class UrlGenerator:
+    def __init__(self):
+        self.passenger_list = PassengerList(
+            adults=settings.PASSENGER_ADULTS,
+            children=settings.PASSENGER_CHILDREN,
+            infant_on_lap=settings.PASSENGER_INFANTS_ON_LAP,
+            seniors=settings.PASSENGER_SENIORS,
+            students=settings.PASSENGER_STUDENTS,
+            toddlers_in_seat=settings.PASSENGER_TODDLERS_IN_OWN_SEAT,
+            youths=settings.PASSENGER_YOUTHS,
+        )
+        self.baggage_list = BaggageList(
+            checked_bags=settings.CHECKED_BAG_PER_PASSENGER,
+            carry_on_bags=settings.CARRY_ON_BAG_PER_PASSENGER,
+        )
+        self.max_stop_filter = MaxStopFilter(number_of_stops=settings.MAX_STOPS)
+        self.flight_duration_filter = FlightDurationFilter(
+            max_time=settings.MAX_FLIGHT_DURATION
+        )
+        self.layover_filter = LayoverFilter(
+            min_time=settings.MIN_LAYOVER_DURATION,
+            max_time=settings.MAX_LAYOVER_DURATION,
+        )
+        self.search_parameters = FlightSearchParameters(
+            passenger_list=self.passenger_list,
+            baggage_list=self.baggage_list,
+            max_stop_filter=self.max_stop_filter,
+            layover_filter=self.layover_filter,
+            flight_duration_filter=self.flight_duration_filter,
+        )
+        self.date_tuples = split_date_window(
+            settings.SEARCH_DATE_BEGIN, settings.SEARCH_DATE_END
+        )
 
-    Returns:
-        List[str]: The list of URLs
-    """
-    passenger_list = PassengerList(
-        adults=settings.PASSENGER_ADULTS,
-        children=settings.PASSENGER_CHILDREN,
-        infant_on_lap=settings.PASSENGER_INFANTS_ON_LAP,
-        seniors=settings.PASSENGER_SENIORS,
-        students=settings.PASSENGER_STUDENTS,
-        toddlers_in_seat=settings.PASSENGER_TODDLERS_IN_OWN_SEAT,
-        youths=settings.PASSENGER_YOUTHS,
-    )
-    baggage_list = BaggageList(
-        checked_bags=settings.CHECKED_BAG_PER_PASSENGER,
-        carry_on_bags=settings.CARRY_ON_BAG_PER_PASSENGER,
-    )
-    max_stop_filter = MaxStopFilter(number_of_stops=settings.MAX_STOPS)
-    search_parameters = FlightSearchParameters(
-        passenger_list=passenger_list,
-        baggage_list=baggage_list,
-        max_stop_filter=max_stop_filter,
-    )
-    date_tuples = split_date_window(
-        settings.SEARCH_DATE_BEGIN, settings.SEARCH_DATE_END
-    )
-    from_airport = AirPort(
-        code=settings.FROM_AIRPORT,
-        allow_nearby_airports=settings.FROM_ALLOW_NEARBY_AIRPORTS,
-    )
-    destination_airport = AirPort(
-        code=settings.DESTINATION_AIRPORT,
-        allow_nearby_airports=settings.DESTINATION_ALLOW_NEARBY_AIRPORTS,
-    )
-    round_trip = AirportTrip(
-        from_airport=from_airport, destination_airport=destination_airport
-    )
+        self.from_airport = AirPort(
+            code=settings.FROM_AIRPORT,
+            allow_nearby_airports=settings.FROM_ALLOW_NEARBY_AIRPORTS,
+        )
+        self.destination_airport = AirPort(
+            code=settings.DESTINATION_AIRPORT,
+            allow_nearby_airports=settings.DESTINATION_ALLOW_NEARBY_AIRPORTS,
+        )
+        self.round_trip = AirportTrip(
+            from_airport=self.from_airport, destination_airport=self.destination_airport
+        )
 
-    urls: List[str] = []
-    for start_date, end_date in date_tuples:
-        url = f"{settings.WEBSITE_URL}/flights/{round_trip}/{start_date.isoformat()}/{end_date.isoformat()}-flexible-calendar-{settings.MIN_NIGHTS}to{settings.MAX_NIGHTS}{search_parameters}"
-        logger.debug(f"Adding URL: {url}")
-        urls.append(url)
-    return urls
+    @property
+    def date_begin(self) -> date:
+        return self.date_tuples[0][0]
+
+    @property
+    def date_end(self) -> date:
+        return self.date_tuples[-1][1]
+
+    def generate_url(
+        self, start_date: date, end_date: date, flexible_calendar: bool = True
+    ) -> str:
+        """
+        Generate the search URL for a given date.
+
+        Returns:
+            str: The URL
+        """
+        url = f"{settings.WEBSITE_URL}/flights/{self.round_trip}/{start_date.isoformat()}/{end_date.isoformat()}"
+        if flexible_calendar:
+            url = (
+                url + f"-flexible-calendar-{settings.MIN_NIGHTS}to{settings.MAX_NIGHTS}"
+            )
+        url = url + str(self.search_parameters)
+        return url
+
+    def generate_urls(self, flexible_calendar: bool = True) -> List[str]:
+        """Generate the list of URL to scrap
+
+        Returns:
+            List[str]: The list of URLs
+        """
+
+        urls: List[str] = []
+        for start_date, end_date in self.date_tuples:
+            url = self.generate_url(start_date, end_date, flexible_calendar)
+            logger.debug(f"Adding URL: {url}")
+            urls.append(url)
+        return urls
 
 
 class FlightDateElement(BaseModel):
@@ -89,28 +130,32 @@ class FlightTrip(BaseModel):
     search_link: Union[HttpUrl, None]  # Search link for other flights at this date
     direct_link: Union[HttpUrl, None]  # Direct link to the selling company
     first_trip: Union[AirportTrip, None]
+    first_trip_date: datetime | None
     return_trip: Union[AirportTrip, None]
-    # currency: str
+    return_trip_date: datetime | None
     price: Price = Price.fromstring("100 €")
-    # duration: timedelta
 
     class Config:
         arbitrary_types_allowed = True
 
     def __repr__(self):
-        return f"Flight trip {self.first_trip.from_airport} - {self.first_trip.destination_airport}, {self.return_trip.from_airport} - {self.return_trip.destination_airport} at {self.price}. Booking link: {self.direct_link}"
+        return f"Flight trip {self.first_trip.from_airport}-{self.first_trip.destination_airport} at {self.first_trip_date.date().isoformat()}, return {self.return_trip.from_airport}-{self.return_trip.destination_airport} at {self.return_trip_date.date().isoformat()}, price {self.price.currency}{self.price.amount_text}.\nBooking link: {self.direct_link}\nOther flights at this date:{self.search_link}"
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class Bot:
     def __init__(self):
-        # Use Firefox without GUI
         self.default_timeout = 10
         options = webdriver.FirefoxOptions()
-        options.headless = False
+        options.headless = settings.HEADLESS_MODE
+        # Use Firefox browser (geckodriver)
         self.driver: webdriver.Remote = webdriver.Firefox(options=options)
         self.driver.implicitly_wait(self.default_timeout)
         self.started = False
         self.search_urls: List[str] | None = None
+        self.url_generator = UrlGenerator()
 
     def _force_click(self, element: WebElement):
         """Replace classical Selenium click when the latter is not possible.
@@ -188,7 +233,6 @@ class Bot:
         flight_date_webelements = web_element.find_elements(
             By.XPATH, "//div[@class='price']"
         )
-        # logger.debug(f"{flight_date_webelements=}")
         flight_dates: List[FlightDateElement] = []
 
         for web_element in flight_date_webelements:
@@ -196,10 +240,8 @@ class Bot:
                 raw_price = web_element.text
                 # Make sure the departure date case is not empty
                 if raw_price:
-                    # logger.debug(f"{raw_price=}")
                     price = Price.fromstring(raw_price)
                     if price.amount:
-                        # logger.debug(f"Price: {price}")
                         flight_dates.append(
                             FlightDateElement(
                                 web_element=web_element,
@@ -208,9 +250,7 @@ class Bot:
                         )
             except StaleElementReferenceException as e:
                 logger.exception(e)
-        # logger.debug(f"{flight_dates=}")
         flight_dates.sort(key=lambda x: x.price)
-        logger.debug(f"{flight_dates=}")
         chosen_dates = flight_dates[0:nb_results]
         return chosen_dates
 
@@ -220,25 +260,6 @@ class Bot:
         self.driver.get(url)
         self.wait_progress_bar()
 
-        # departure_dates_webelements = self.driver.find_elements(
-        #     By.XPATH, "//div[@class='price']"
-        # )
-        # departure_dates: List[FlightDateElement] = []
-
-        # for web_element in departure_dates_webelements:
-        #     raw_price = web_element.text
-        #     # Make sure the departure date case is not empty
-        #     if raw_price:
-        #         logger.debug(f"{raw_price=}")
-        #         price = Price.fromstring(raw_price)
-        #         if price.amount:
-        #             logger.debug(f"Price: {price}")
-        #             departure_dates.append(
-        #                 FlightDateElement(web_element=web_element, price=price.amount)
-        #             )
-        # departure_dates.sort(key=lambda x: x.price)
-        # chosen_dates = departure_dates[0 : nb_results - 1]
-        # return chosen_dates
         return self._get_best_dates(
             web_element=self.driver.find_element(By.XPATH, "//html"),
             nb_results=nb_results,
@@ -252,152 +273,122 @@ class Bot:
         )
         result: List[FlightTrip]
         result = []
-        logger.debug(f"{departure_dates=}")
+        # logger.debug(f"{departure_dates=}")
         for d in departure_dates:
             self._force_click(d.web_element)
-            # # Clicking on a departure date open a dialog content with return dates
-            # return_dialog = self.driver.find_element(
-            #     By.XPATH,
-            #     "//div[contains(@class, 'Flights-Results-FlexMonthView Flights-Results-FlexMonthReturnView returnView')]",
-            # )
-            # return_dates = self._get_best_dates(return_dialog, nb_results + 1)
-            # logger.debug(f"{return_dates=}")
-            # # self.driver.implicitly_wait(1)
-            # for return_date in return_dates:
-            #     logger.debug("New loop: trying to check the return date results")
-            #     # Try to check the result. Sometimes click doesn't work?
-            #     result_details = None
-
-            #     # self._force_click(return_date.web_element)
-            #     return_date.web_element.click()
-            #     result_detail_candidates: List[
-            #         WebElement
-            #     ] = return_dialog.find_elements(
-            #         By.XPATH,
-            #         # "//div[contains(@class, 'resultVisible') and not(ancestor::div[contains(@style,'display:none')])]",
-            #         "//div[contains(@class, 'resultVisible')]",
-            #     )
-            #     logger.debug(f"{result_detail_candidates=}")
-            #     for elem in result_detail_candidates:
-            #         if elem.is_displayed():
-            #             logger.debug("displayed element")
-            #             result_details = elem
-
-            #     if not result_details:
-            #         logger.warning("Failed to load a result for a return date.")
-            #     else:
-            #         search_link = result_details.find_element(
-            #             By.XPATH, "//a[contains(@class, 'searchMore')]"
-            #         ).get_attribute("href")
-
-            #         direct_link = result_details.find_element(
-            #             By.XPATH, "//a[contains(@class, 'booking-link')]"
-            #         ).get_attribute("href")
-            #         flight_trip = FlightTrip(
-            #             search_link=urljoin(settings.WEBSITE_URL, search_link),
-            #             direct_link=direct_link,
-            #             price=return_date.price,
-            #         )
-            #         result.append(flight_trip)
-            #         logger.debug("Appended flight trip to the results.")
-            #     # Quite the current popup
-
-            # TODO wait for popup to be visible before pressing ESC key
             sleep(1)
             self._press_key(Keys.ESCAPE)
-            # self.driver.refresh()
-            # self._click_outside()
-            #
-            # self._remove(return_dialog)
-        # self.revert_default_timeout()
 
-        # TODO Now that we clicked on N cheapest departures, check the table for all round-trip possibilities
-        logger.debug("Will now check return possibilities")
-        sleep(1)
+        sleep(1.5)
         return_result_list: List[WebElement] = self.driver.find_elements(
-            By.XPATH, "//div[@class='returnResultsList']"
+            By.XPATH, "//div[@class='returnResultItem']"
         )
-        logger.debug(f"{return_result_list=}")
+
         # For each departure date, there is a return result list.
         for return_result_item in return_result_list:
-            # Check all return results in the list
-            flight_trip = FlightTrip()
-            # Parse price
-            price_web_element = return_result_item.find_element(
-                By.XPATH, "//span[@class='price-text']"
-            )
-            logger.debug(
-                f"web element price: {price_web_element.get_attribute('textContent')}"
-            )
-            flight_trip.price = Price.fromstring(
-                price_web_element.get_attribute("textContent")
-            )
+            try:
+                # Check all return results in the list
+                flight_trip = FlightTrip()
 
-            # Parse booking link
-            booking_link_web_element = return_result_item.find_element(
-                By.XPATH, "//a[@class='booking-link ']"
-            )
-            booking_link = booking_link_web_element.get_attribute("href")
-            escaped_booking_link = html.unescape(booking_link)
-            flight_trip.direct_link = urljoin(
-                settings.WEBSITE_URL, escaped_booking_link
-            )
+                # Parse price
+                price_web_element = return_result_item.find_element(
+                    By.XPATH, ".//span[@class='price-text']"
+                )
 
-            # For search link, we need: departure date, return date, airports
-            first_trip_from_airport_str = return_result_item.find_element(
-                By.XPATH, "//div[contains(@id, 'leg-0-origin-airport')]"
-            ).get_attribute("textContent")
-            logger.debug(f"{first_trip_from_airport_str=}")
-            first_trip_to_airport_str = return_result_item.find_element(
-                By.XPATH, "//div[contains(@id, 'leg-0-destination-airport')]"
-            ).get_attribute("textContent")
-            flight_trip.first_trip = AirportTrip(
-                from_airport=AirPort.from_string(first_trip_from_airport_str),
-                destination_airport=AirPort.from_string(first_trip_to_airport_str),
-            )
+                flight_trip.price = Price.fromstring(
+                    price_web_element.get_attribute("textContent")
+                )
 
-            return_trip_from_airport_str = return_result_item.find_element(
-                By.XPATH, "//div[contains(@id, 'leg-1-origin-airport')]"
-            ).get_attribute("textContent")
+                # Parse dates
+                date_webelements = return_result_item.find_elements(
+                    By.XPATH, ".//div[contains(@class, 'with-date')]"
+                )
+                date_first_trip_webelement = date_webelements[0]
+                date_first_trip = parse_date(
+                    date_first_trip_webelement.get_attribute("textContent")
+                )
+                flight_trip.first_trip_date = date_first_trip
+                date_return_trip_webelement = date_webelements[1]
 
-            return_trip_to_airport_str = return_result_item.find_element(
-                By.XPATH, "//div[contains(@id, 'leg-1-destination-airport')]"
-            ).get_attribute("textContent")
-            flight_trip.return_trip = AirportTrip(
-                from_airport=AirPort.from_string(return_trip_from_airport_str),
-                destination_airport=AirPort.from_string(return_trip_to_airport_str),
-            )
+                date_return_trip = parse_date(
+                    date_return_trip_webelement.get_attribute("textContent")
+                )
+                flight_trip.return_trip_date = date_return_trip
 
-            # Add the trip to the list
-            logger.debug(flight_trip)
-            result.append(flight_trip)
+                # Parse booking link
+                booking_link_web_element = return_result_item.find_element(
+                    By.XPATH, ".//a[@class='booking-link ']"
+                )
+                booking_link = booking_link_web_element.get_attribute("href")
+                escaped_booking_link = html.unescape(booking_link)
+                flight_trip.direct_link = urljoin(
+                    settings.WEBSITE_URL, escaped_booking_link
+                )
+
+                # For search link, we need departure date, return date and airports
+                first_trip_from_airport_str = return_result_item.find_element(
+                    By.XPATH, ".//div[contains(@id, 'leg-0-origin-airport')]"
+                ).get_attribute("textContent")
+                first_trip_to_airport_str = return_result_item.find_element(
+                    By.XPATH, ".//div[contains(@id, 'leg-0-destination-airport')]"
+                ).get_attribute("textContent")
+                flight_trip.first_trip = AirportTrip(
+                    from_airport=AirPort.from_string(first_trip_from_airport_str),
+                    destination_airport=AirPort.from_string(first_trip_to_airport_str),
+                )
+
+                return_trip_from_airport_str = return_result_item.find_element(
+                    By.XPATH, ".//div[contains(@id, 'leg-1-origin-airport')]"
+                ).get_attribute("textContent")
+
+                return_trip_to_airport_str = return_result_item.find_element(
+                    By.XPATH, ".//div[contains(@id, 'leg-1-destination-airport')]"
+                ).get_attribute("textContent")
+                flight_trip.return_trip = AirportTrip(
+                    from_airport=AirPort.from_string(return_trip_from_airport_str),
+                    destination_airport=AirPort.from_string(return_trip_to_airport_str),
+                )
+
+                flight_trip.search_link = self.url_generator.generate_url(
+                    date_first_trip.date(),
+                    date_return_trip.date(),
+                    flexible_calendar=False,
+                )
+
+                # Add the trip to the list
+                if flight_trip.return_trip_date.date() < self.url_generator.date_end:
+                    result.append(flight_trip)
+                else:
+                    # "Flight trip not added because return date exceeds the maximum specified date."
+                    pass
+            except StaleElementReferenceException as e:
+                logger.exception(e)
 
         result.sort(key=lambda x: x.price)
-        # TODO sort the trip list and keep the N best flights
         result = result[0:nb_results]
-
+        logger.debug(f"Found {len(result)} flight(s) for this URL.")
         return result
-        # return return_result_list
 
     def search(self):
         if not self.started:
             self.start()
 
-        self.search_urls = generate_urls()
+        self.search_urls = self.url_generator.generate_urls()
 
-        # TODO do all urls
-        flight_trips = self.get_best_flights(
-            self.search_urls[0], nb_results=settings.NUMBER_OF_RESULTS
+        self.results: List[FlightTrip]
+        self.results = []
+
+        for i, url in enumerate(self.search_urls):
+            logger.debug(f"Scraping the website... [URL {i+1}/{len(self.search_urls)}]")
+            flight_trips = self.get_best_flights(
+                url, nb_results=settings.NUMBER_OF_RESULTS
+            )
+            self.results.extend(flight_trips)
+
+        self.results.sort(key=lambda x: x.price)
+        self.results = self.results[0 : settings.NUMBER_OF_RESULTS]
+        logger.info(
+            f"Here are the {len(self.results)} cheapest flights matching your criterias:\n\n"
+            + "\n\n".join([str(result) for result in self.results])
         )
-        for trip in flight_trips:
-            logger.info(f"{trip=}")
-        # for url in self.search_urls:
-        #     self.get_best_flights(url, nb_results=settings.NUMBER_OF_RESULTS)
-
-        # TODO
-        # For each url
-        # - Get N cheapest two-direction flight
-        # - store in global array
-        # At the end
-        # Keep N best flights from array
-        # - show flight description & URL
+        logger.info("Done!")

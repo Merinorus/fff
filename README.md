@@ -28,8 +28,7 @@ Requirements:
 ## With Docker
 
 ```shell
-docker build -t fff .
-docker run fff
+docker-compose up --build
 ```
 
 # Configuration

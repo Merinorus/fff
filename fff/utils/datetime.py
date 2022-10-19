@@ -1,5 +1,15 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import List
+
+import dateparser
+from dateutil.relativedelta import relativedelta
+from pydantic import NonNegativeFloat
+
+from fff.config import settings
+
+
+def hours_to_minutes(time_in_hours: NonNegativeFloat) -> int:
+    return round(time_in_hours * 60)
 
 
 def in_n_days_at_most(from_date: date, nb_days: int, max_date: date) -> date:
@@ -47,3 +57,14 @@ def split_date_window(start_date: date, end_date: date) -> List[tuple[date, date
             )
             result.append((split_start_date, split_end_date))
         return result
+
+
+def parse_date(date_str: str) -> datetime:
+    date_time = dateparser.parse(date_str, languages=[settings.WEBSITE_LANGUAGE])
+    if not date_time:
+        raise ValueError(f"Could not parse any date in this string: {date_str}")
+    if date_time <= datetime.now():
+        # We are PROBABLY at the previous year. TODO Check when we look for trip more than one year ahead.
+        # We should instead parse the year written on the calendar on the result page.
+        date_time += relativedelta(years=1)
+    return date_time

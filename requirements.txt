@@ -1,5 +1,6 @@
 ### Requirements for running the application ###
 
+dateparser==1.1.1
 loguru==0.6.0
 price-parser==0.3.4
 pydantic==1.10.2

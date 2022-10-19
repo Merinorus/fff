@@ -13,7 +13,7 @@ WORKDIR /root
 COPY requirements.txt /root
 RUN pip install -r requirements.txt
 COPY . /root
-RUN chmod u+x run.sh
+# RUN chmod u+x run.sh
 # Launch
 # CMD ./run.sh
 # CMD ls -al

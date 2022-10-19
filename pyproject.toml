@@ -35,7 +35,7 @@ profile = "black"
 
 [tool.bumpver]
 # Do not change this manually! Use the "bumpver" command.
-current_version = "0.2022.10.09"
+current_version = "0.2022.10.19"
 # Just before a major release, increase the first number manually so it's tagged at CI
 version_pattern = "0.YYYY.0M.0D[.PATCH][-TAG]"
 commit_message = "bump version to {new_version}"

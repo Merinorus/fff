@@ -4,7 +4,7 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import BaseSettings, Field, NonNegativeInt
+from pydantic import BaseSettings, Field, NonNegativeFloat, NonNegativeInt
 from pydantic.datetime_parse import parse_date
 
 from fff.schemas.stop import MaxNumberOfStops
@@ -21,7 +21,10 @@ class Settings(BaseSettings):
     APP_NAME: str = "Flexible Flight Finder"
     APP_DESCRIPTION: str = "Find the cheapest flight with more flexible dates than online flight comparators."
 
+    HEADLESS_MODE: bool = True  # Run without browser GUI
+
     # Comparator website URL
+    WEBSITE_LANGUAGE: str = "fr"
     WEBSITE_URL: str = "https://www.kayak.fr"
     NUMBER_OF_RESULTS: NonNegativeInt = 3  # How many flight search results to keep
 
@@ -30,11 +33,16 @@ class Settings(BaseSettings):
     FROM_ALLOW_NEARBY_AIRPORTS: bool = False
     DESTINATION_AIRPORT: str = "YUL"
     DESTINATION_ALLOW_NEARBY_AIRPORTS: bool = False
-    MAX_STOPS: MaxNumberOfStops = MaxNumberOfStops.INDIFFERENT
+    MAX_STOPS: int = MaxNumberOfStops.INDIFFERENT.value
     SEARCH_DATE_BEGIN: date = Field(default=parse_date("2023-01-01"))
     SEARCH_DATE_END: date = Field(default=parse_date("2023-04-01"))
     MIN_NIGHTS: NonNegativeInt = 14
     MAX_NIGHTS: NonNegativeInt = 21
+
+    MAX_FLIGHT_DURATION: NonNegativeFloat = 240  # in hours
+
+    MIN_LAYOVER_DURATION: NonNegativeFloat = 0  # In hours. "Escale"
+    MAX_LAYOVER_DURATION: NonNegativeFloat = 72
 
     PASSENGER_ADULTS: NonNegativeInt = 1  # 18 <= age < 65
     PASSENGER_STUDENTS: NonNegativeInt = 0  # >= 18 years old
@@ -51,6 +59,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        use_enum_values = True
 
 
 @lru_cache()
