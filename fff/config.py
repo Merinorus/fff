@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "Flexible Flight Finder"
     APP_DESCRIPTION: str = "Find the cheapest flight with more flexible dates than online flight comparators."
 
+    # Application log level. Can be any python log level: NOTSET, DEBUG, INFO, WARNING, ERROR, FATAL.
+    LOG_LEVEL: str = "INFO"
+
     HEADLESS_MODE: bool = True  # Run without browser GUI
 
     # Comparator website URL

@@ -139,7 +139,7 @@ class FlightTrip(BaseModel):
         arbitrary_types_allowed = True
 
     def __repr__(self):
-        return f"Flight trip {self.first_trip.from_airport}-{self.first_trip.destination_airport} at {self.first_trip_date.date().isoformat()}, return {self.return_trip.from_airport}-{self.return_trip.destination_airport} at {self.return_trip_date.date().isoformat()}, price {self.price.currency}{self.price.amount_text}.\nBooking link: {self.direct_link}\nOther flights at this date:{self.search_link}"
+        return f"### Flight trip {self.first_trip.from_airport}-{self.first_trip.destination_airport} at {self.first_trip_date.date().isoformat()}, return {self.return_trip.from_airport}-{self.return_trip.destination_airport} at {self.return_trip_date.date().isoformat()}, price {self.price.currency}{self.price.amount_text} ###\n#\n# Booking link: {self.direct_link}\n#\n# Other flights at this date:{self.search_link}\n###"
 
     def __str__(self):
         return self.__repr__()
@@ -379,7 +379,7 @@ class Bot:
         self.results = []
 
         for i, url in enumerate(self.search_urls):
-            logger.debug(f"Scraping the website... [URL {i+1}/{len(self.search_urls)}]")
+            print(f"Scraping the website... [URL {i+1}/{len(self.search_urls)}]")
             flight_trips = self.get_best_flights(
                 url, nb_results=settings.NUMBER_OF_RESULTS
             )
@@ -387,8 +387,8 @@ class Bot:
 
         self.results.sort(key=lambda x: x.price)
         self.results = self.results[0 : settings.NUMBER_OF_RESULTS]
-        logger.info(
+        print(
             f"Here are the {len(self.results)} cheapest flights matching your criterias:\n\n"
             + "\n\n".join([str(result) for result in self.results])
+            + "\n\nDone!"
         )
-        logger.info("Done!")
