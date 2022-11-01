@@ -1,6 +1,12 @@
 import logging
+import sys
 
 from loguru import logger as loguru_logger
+
+from fff.config import settings
+
+loguru_logger.remove()
+loguru_logger.add(sys.stderr, level=settings.LOG_LEVEL, colorize=False)
 
 
 class InterceptHandler(logging.Handler):  # type: ignore

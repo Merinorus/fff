@@ -7,6 +7,9 @@ from fff.utils.logging import logger
 
 def main():
     with logger.catch():
+        print(
+            "Starting the bot. The scraping will take several minutes depending on your configuration."
+        )
         bot = Bot()
         bot.search()
 
