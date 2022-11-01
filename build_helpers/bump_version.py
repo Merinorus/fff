@@ -25,7 +25,7 @@ with open("pyproject.toml", "r+") as f:
 os.system("bumpver update --patch --no-commit --no-tag-commit --no-push")
 
 # Check if they are uncommitted files
-if os.popen("git status --porcelain").read():
+if os.popen("git status --porcelain --untracked-files=no").read():
     # Uncommitted changes
     print("Git repository not clean. Please commit and push your changes to pass CI.")
     sys.exit(1)
