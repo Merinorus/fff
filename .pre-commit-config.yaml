@@ -82,3 +82,12 @@ repos:
         args: ["-r", "requirements.txt"]
         language: system
         # stages: [push]
+
+  - repo: local
+    hooks:
+      - id: bumpver
+        name: Bump project version
+        language: system
+        types: [python]
+        stages: [push]
+        entry: python3 build_helpers/bump_version.py
