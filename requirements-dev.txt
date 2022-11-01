@@ -6,6 +6,7 @@
 autoflake==1.7.7
 bandit==1.7.4
 black==22.10.0
+bumpver==2022.1119
 flake8==5.0.4
 isort==5.10.1
 liccheck==0.7.2
