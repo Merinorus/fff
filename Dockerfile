@@ -1,9 +1,12 @@
 FROM python:3.11-slim as base
+
 ENV PYTHONUNBUFFERED=1
-ARG GECKO_DRIVER_VERSION="v0.32.0"
-ARG ARCH="linux64"
+
 
 FROM base as buildstage
+
+ARG GECKO_DRIVER_VERSION="v0.32.0"
+ARG ARCH="linux64"
 
 # Install Python libraries & Geckodriver
 RUN apt-get update \
@@ -12,13 +15,14 @@ RUN apt-get update \
     && pip3 install --upgrade pip \
     && rm -rf /var/lib/apt/lists/* \
     && wget -q https://github.com/mozilla/geckodriver/releases/download/${GECKO_DRIVER_VERSION}/geckodriver-${GECKO_DRIVER_VERSION}-${ARCH}.tar.gz \
-    && tar -xvzf geckodriver-${GECKO_DRIVER_VERSION}-linux64.tar.gz -C /usr/local/bin/ \
+    && tar -xvzf geckodriver-${GECKO_DRIVER_VERSION}-${ARCH}.tar.gz -C /usr/local/bin/ \
     && chmod +x /usr/local/bin/geckodriver \
     && rm geckodriver-${GECKO_DRIVER_VERSION}-${ARCH}.tar.gz
 
 WORKDIR /usr/src/app
 COPY requirements.txt /usr/src/app
 RUN pip3 install -r /usr/src/app/requirements.txt
+
 
 FROM base as runtime-image
 
