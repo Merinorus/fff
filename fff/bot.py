@@ -19,6 +19,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from fff.config import settings
 from fff.schemas.airport import AirPort, AirportTrip
 from fff.schemas.baggage import BaggageList
+from fff.schemas.flexible_calendar import DateWindow, FlexibleCalendar
 from fff.schemas.flight_duration import FlightDurationFilter
 from fff.schemas.flight_search import FlightSearchParameters
 from fff.schemas.layover import LayoverFilter
@@ -31,6 +32,9 @@ from fff.utils.progress_bar import progressbar_is_full
 
 class UrlGenerator:
     def __init__(self):
+        self.flexible_calendar = FlexibleCalendar(
+            min_nights=settings.MIN_NIGHTS, max_nights=settings.MAX_NIGHTS
+        )
         self.passenger_list = PassengerList(
             adults=settings.PASSENGER_ADULTS,
             children=settings.PASSENGER_CHILDREN,
@@ -84,7 +88,10 @@ class UrlGenerator:
         return self.date_tuples[-1][1]
 
     def generate_url(
-        self, start_date: date, end_date: date, flexible_calendar: bool = True
+        self,
+        start_date: date,
+        end_date: date,
+        date_window: Union[DateWindow, None] = None,
     ) -> str:
         """
         Generate the search URL for a given date.
@@ -93,9 +100,10 @@ class UrlGenerator:
             str: The URL
         """
         url = f"{settings.WEBSITE_URL}/flights/{self.round_trip}/{start_date.isoformat()}/{end_date.isoformat()}"
-        if flexible_calendar:
+        if date_window:
             url = (
-                url + f"-flexible-calendar-{settings.MIN_NIGHTS}to{settings.MAX_NIGHTS}"
+                url
+                + f"-flexible-calendar-{date_window.min_nights}to{date_window.max_nights}"
             )
         url = url + str(self.search_parameters)
         return url
@@ -108,10 +116,11 @@ class UrlGenerator:
         """
 
         urls: List[str] = []
-        for start_date, end_date in self.date_tuples:
-            url = self.generate_url(start_date, end_date, flexible_calendar)
-            logger.debug(f"Adding URL: {url}")
-            urls.append(url)
+        for date_window in self.flexible_calendar.date_windows:
+            for start_date, end_date in self.date_tuples:
+                url = self.generate_url(start_date, end_date, date_window)
+                logger.debug(f"Adding URL: {url}")
+                urls.append(url)
         return urls
 
 
@@ -352,7 +361,6 @@ class Bot:
                 flight_trip.search_link = self.url_generator.generate_url(
                     date_first_trip.date(),
                     date_return_trip.date(),
-                    flexible_calendar=False,
                 )
 
                 # Add the trip to the list
