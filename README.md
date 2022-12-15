@@ -2,18 +2,22 @@
 
 Find the cheapest round-trip flight with more flexible dates than online flight comparators.
 
-Round-trip search is done as following:
+## Features
 
-- Source and destination airports
-- How many nights you want to stay (ex: between 12 and 15 nights)
-- The date range you can potentially travel (ex: from January 2023 to August 2023)
+FFF is a command-line interface to help scraping Kayak's round trips with the [flexible date](https://www.kayak.com/news/flexible-dates-nearby-airports/) mode only.
 
-You can also specify:
+A round-trip search on Kayak is done as following:
 
-- Allow nearby airports
-- How many stops at most (direct only, one stop, unlimited)
-- Number of passengers (you can specify adults, seniors, students, children...)
-- How many baggages per passenger (carry-on and checked)
+- Specify **source** and **destination** airports
+- **How many nights** you want to stay (eg: between 12 and 15 nights)
+- The **travel period** (eg: January 2023)
+
+But there are some limitations on Kayak:
+
+- You cannot specify an interval duration higher that 7 days (eg: you cannot search a trip between 10 and 20 days)
+- The search period is limited to 4 weeks (eg: you cannot look for a flight from january to mars)
+
+**This tool removes these limits.**
 
 ## How to run
 
@@ -35,6 +39,8 @@ docker-compose up --build
 
 The configuration is located at `fff/config.py`.
 You can override any of the settings with a `.env` file at the project root directory (or just pass the environment variables to Docker if you're using it).
+
+An `example.env` file is available to help you writing your own trip.
 
 ## Development
 

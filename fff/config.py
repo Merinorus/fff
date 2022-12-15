@@ -21,32 +21,33 @@ class Settings(BaseSettings):
     APP_NAME: str = "Flexible Flight Finder"
     APP_DESCRIPTION: str = "Find the cheapest flight with more flexible dates than online flight comparators."
 
+    ### For debugging and development only.
     # Application log level. Can be any python log level: NOTSET, DEBUG, INFO, WARNING, ERROR, FATAL.
     LOG_LEVEL: str = "INFO"
-
     HEADLESS_MODE: bool = True  # Run without browser GUI
 
-    # Comparator website URL
-    WEBSITE_LANGUAGE: str = "fr"
-    WEBSITE_URL: str = "https://www.kayak.fr"
+    ### Comparator website URL ###
+    WEBSITE_URL: str = "https://www.kayak.com"  # your locale Kayak website.
+    WEBSITE_LANGUAGE: str = "en"  # needed to parse dates correctly
     NUMBER_OF_RESULTS: NonNegativeInt = 3  # How many flight search results to keep
 
-    # Travel preferences
+    ### Trip dates and destinations ###
     FROM_AIRPORT: str = "PAR"
     FROM_ALLOW_NEARBY_AIRPORTS: bool = False
     DESTINATION_AIRPORT: str = "YUL"
     DESTINATION_ALLOW_NEARBY_AIRPORTS: bool = False
-    MAX_STOPS: int = MaxNumberOfStops.INDIFFERENT.value
-    SEARCH_DATE_BEGIN: date = Field(default=parse_date("2023-01-01"))
-    SEARCH_DATE_END: date = Field(default=parse_date("2023-04-01"))
     MIN_NIGHTS: NonNegativeInt = 14
     MAX_NIGHTS: NonNegativeInt = 21
+    SEARCH_DATE_BEGIN: date = Field(default=parse_date("2023-01-01"))
+    SEARCH_DATE_END: date = Field(default=parse_date("2023-04-01"))
 
+    ### Flights preferences ###
+    MAX_STOPS: int = MaxNumberOfStops.INDIFFERENT.value
     MAX_FLIGHT_DURATION: NonNegativeFloat = 240  # in hours
-
     MIN_LAYOVER_DURATION: NonNegativeFloat = 0  # In hours. "Escale"
     MAX_LAYOVER_DURATION: NonNegativeFloat = 72
 
+    ### Passengers ###
     PASSENGER_ADULTS: NonNegativeInt = 1  # 18 <= age < 65
     PASSENGER_STUDENTS: NonNegativeInt = 0  # >= 18 years old
     PASSENGER_SENIORS: NonNegativeInt = 0  # >= 65 years old
@@ -55,6 +56,7 @@ class Settings(BaseSettings):
     PASSENGER_TODDLERS_IN_OWN_SEAT: NonNegativeInt = 0  # <= 2 years old
     PASSENGER_INFANTS_ON_LAP: NonNegativeInt = 0  # <= 2 years old
 
+    ### Bags ###
     CARRY_ON_BAG_PER_PASSENGER: NonNegativeInt = 1
     CHECKED_BAG_PER_PASSENGER: NonNegativeInt = 0
 
