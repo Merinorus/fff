@@ -75,10 +75,9 @@ def get_settings() -> Settings:
     """
     settings = Settings()
 
-    # Kayak restriction. Check the night range is 7 nights maximum.
-    if settings.MAX_NIGHTS - settings.MIN_NIGHTS > 7:
+    if settings.MAX_NIGHTS < settings.MIN_NIGHTS:
         raise ValueError(
-            "Please specify a valid number of nights at destination (max. range is 7 nights e.g. 14-21)."
+            f"Please specify a valid number of nights at destination: MAX_NIGHTS (={settings.MAX_NIGHTS}) should be higher or equal than MIN_NIGHTS (={settings.MIN_NIGHTS})"
         )
 
     return settings
