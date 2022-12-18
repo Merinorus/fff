@@ -282,7 +282,6 @@ class Bot:
         )
         result: List[FlightTrip]
         result = []
-        # logger.debug(f"{departure_dates=}")
         for d in departure_dates:
             self._force_click(d.web_element)
             sleep(1)
@@ -310,7 +309,8 @@ class Bot:
 
                 # Parse dates
                 date_webelements = return_result_item.find_elements(
-                    By.XPATH, ".//div[contains(@class, 'with-date')]"
+                    By.XPATH,
+                    ".//div[contains(@class, 'section') and contains(@class, 'date')]",
                 )
                 date_first_trip_webelement = date_webelements[0]
                 date_first_trip = parse_date(
@@ -374,7 +374,7 @@ class Bot:
             except IndexError as e:
                 logger.exception(e)
                 logger.error(
-                    "A prolem might have occurred with the date for this flight. Let's pass on this one."
+                    f"A prolem might have occurred with the date for this flight. Let's pass on this one. URL: {url}"
                 )
 
         result.sort(key=lambda x: x.price)
