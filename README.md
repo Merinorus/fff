@@ -29,7 +29,7 @@ Requirements:
 - [Mozilla Firefox](https://www.mozilla.org/firefox)
 - [Geckodriver](https://github.com/mozilla/geckodriver/releases)
 
-```python
+```shell
 > pip install -r requirements.txt
 > python -m fff
 ```
@@ -142,7 +142,7 @@ DESTINATION_ALLOW_NEARBY_AIRPORTS=true
 
 ### Results
 
-```log
+```shell
 > python -m fff
 Starting the bot. The scraping will take several minutes depending on your configuration.
 Scraping the website... [URL 1/3]
@@ -225,7 +225,7 @@ DESTINATION_ALLOW_NEARBY_AIRPORTS=true
 
 ### Results
 
-```log
+```shell
 > python -m fff
 Starting the bot. The scraping will take several minutes depending on your configuration.
 Scraping the website... [URL 1/6]
@@ -264,7 +264,7 @@ Done!
 
 ## Development
 
-This project uses Pre-commit. Make sure to install it.
+This project uses Pre-commit. Make sure to install it if you want to develop and make some commits.
 
 ```shell
 > pre-commit install --hook-type pre-commit --hook-type pre-push
