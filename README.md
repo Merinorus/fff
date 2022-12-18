@@ -108,7 +108,10 @@ You can configure the application with the following [environment variables](htt
 
 ### Examples
 
-- Paris - Montreal on kayak.fr, between 6 to 12 nights:
+<details>
+  <summary>Paris - Montreal on kayak.fr, between 6 to 12 nights</summary>
+
+### Configuration file
 
 ```env
 SEARCH_DATE_BEGIN=2023-01-01
@@ -137,7 +140,60 @@ DESTINATION_AIRPORT="YUL"
 DESTINATION_ALLOW_NEARBY_AIRPORTS=true
 ```
 
-- New-York - Sydney on kayak.com, between 30 - 50 nights, with a long layover rallowed:
+### Results
+
+```log
+> python -m fff
+Starting the bot. The scraping will take several minutes depending on your configuration.
+Scraping the website... [URL 1/3]
+Scraping the website... [URL 2/3]
+Scraping the website... [URL 3/3]
+Here are the 5 cheapest flights matching your criterias:
+
+### Flight trip CDG-YUL at 2023-01-23, return YUL-CDG at 2023-02-04, price €233 ###
+#
+# Booking link: https://www.kayak.fr/book/flight?code=NfECIkWl4c.kB30-7IsNAtFj024N3_sTg.24602.f6ca60d664a2e4a57eb1468e55e036ea&h=ee7c5aaef1e9&sub=E-1a7344e5920&payment=0.00:EUR:VA_D:Visa%20Debit:true&carryOn=1&carryOnFee=0.00&carryOnCurrency=EUR&pageOrigin=F..RP.MB.M6
+#
+# Other flights at this date:https://www.kayak.fr/flights/CDG,nearby-YUL,nearby/2023-01-23/2023-02-04/1adults?fs=cfc=1;stops=-2;layoverdur=-480;legdur=-900&sort=bestflight_a
+###
+
+### Flight trip CDG-YUL at 2023-03-17, return YUL-CDG at 2023-03-25, price €233 ###
+#
+# Booking link: https://www.kayak.fr/book/flight?code=NfFCnT6DVz.kB30-7IsNAtFj024N3_sTg.24602.e3d3eeb3d2fffceea7be5259085090b4&h=768ccd1f385c&sub=E-1a7344e5920&payment=0.00:EUR:VA_D:Visa%20Debit:true&carryOn=1&carryOnFee=0.00&carryOnCurrency=EUR&pageOrigin=F..RP.MB.M0
+#
+# Other flights at this date:https://www.kayak.fr/flights/CDG,nearby-YUL,nearby/2023-03-17/2023-03-25/1adults?fs=cfc=1;stops=-2;layoverdur=-480;legdur=-900&sort=bestflight_a
+###
+
+### Flight trip CDG-YUL at 2023-03-17, return YUL-CDG at 2023-03-27, price €233 ###
+#
+# Booking link: https://www.kayak.fr/book/flight?code=NfFCnT6DVz.kB30-7IsNAtFj024N3_sTg.24602.6c310fad4141a6bac71bfa6a9b019ada&h=9e43f27422e7&sub=E-1a7344e5920&payment=0.00:EUR:VA_D:Visa%20Debit:true&carryOn=1&carryOnFee=0.00&carryOnCurrency=EUR&pageOrigin=F..RP.MB.M1
+#
+# Other flights at this date:https://www.kayak.fr/flights/CDG,nearby-YUL,nearby/2023-03-17/2023-03-27/1adults?fs=cfc=1;stops=-2;layoverdur=-480;legdur=-900&sort=bestflight_a
+###
+
+### Flight trip CDG-YUL at 2023-03-08, return YUL-CDG at 2023-03-14, price €272 ###
+#
+# Booking link: https://www.kayak.fr/book/flight?code=NfFigEfSvR.HveLZWxvNM9Fj024N3_sTg.28753.09ea64b780c750b45f7db5e33d929987&h=88b9d6dabb33&sub=E-12591162e9f&payment=0.00:EUR:VA_D:Visa%20Debit:true&carryOn=1&carryOnFee=0.00&carryOnCurrency=EUR&pageOrigin=F..RP.MB.M0
+#
+# Other flights at this date:https://www.kayak.fr/flights/CDG,nearby-YUL,nearby/2023-03-08/2023-03-14/1adults?fs=cfc=1;stops=-2;layoverdur=-480;legdur=-900&sort=bestflight_a
+###
+
+### Flight trip CDG-YUL at 2023-03-08, return YUL-CDG at 2023-03-15, price €272 ###
+#
+# Booking link: https://www.kayak.fr/book/flight?code=NfFigEfSvR.HveLZWxvNM9Fj024N3_sTg.28753.154ec33432c3e121cb2a14b61f1a2e34&h=58cc4df03977&sub=E-12591162e9f&payment=0.00:EUR:VA_D:Visa%20Debit:true&carryOn=1&carryOnFee=0.00&carryOnCurrency=EUR&pageOrigin=F..RP.MB.M1
+#
+# Other flights at this date:https://www.kayak.fr/flights/CDG,nearby-YUL,nearby/2023-03-08/2023-03-15/1adults?fs=cfc=1;stops=-2;layoverdur=-480;legdur=-900&sort=bestflight_a
+###
+
+Done!
+```
+
+</details>
+
+<details>
+  <summary>New-York - Sydney on kayak.com, between 30 - 50 nights, with a long layover allowed</summary>
+
+### Configuration file
 
 ```env
 SEARCH_DATE_BEGIN=2023-03-01
@@ -166,6 +222,45 @@ FROM_ALLOW_NEARBY_AIRPORTS=false
 DESTINATION_AIRPORT="SYD"
 DESTINATION_ALLOW_NEARBY_AIRPORTS=true
 ```
+
+### Results
+
+```log
+> python -m fff
+Starting the bot. The scraping will take several minutes depending on your configuration.
+Scraping the website... [URL 1/6]
+Scraping the website... [URL 2/6]
+Scraping the website... [URL 3/6]
+Scraping the website... [URL 4/6]
+Scraping the website... [URL 5/6]
+Scraping the website... [URL 6/6]
+Here are the 3 cheapest flights matching your criterias:
+
+### Flight trip JFK-SYD at 2023-03-07, return SYD-JFK at 2023-04-09, price $1,752 ###
+#
+# Booking link: https://www.kayak.com/book/flight?code=NfEiOsfMY6.eTU9kA5UiVBFj024N3_sTg.175154.b4a1086c60d1504e8bacadfaf474a70c&h=89f2b924cbb9&sub=E-163fb6e4daa&numOfBags=1&carryOn=1&carryOnFee=0.00&carryOnCurrency=USD&pageOrigin=F..RP.MB.M1
+#
+# Other flights at this date:https://www.kayak.com/flights/NYC-SYD,nearby/2023-03-07/2023-04-09/2adults/children-11-11?fs=bfc=1;cfc=1;stops=-2;layoverdur=-5760;legdur=-7200&sort=bestflight_a
+###
+
+### Flight trip JFK-SYD at 2023-03-07, return SYD-JFK at 2023-04-10, price $1,752 ###
+#
+# Booking link: https://www.kayak.com/book/flight?code=NfEiOsfMY6.eTU9kA5UiVBFj024N3_sTg.175154.43ea64b44dc20f5b781d61fbb0ef437d&h=223a3f94027c&sub=E-163fb6e4daa&numOfBags=1&carryOn=1&carryOnFee=0.00&carryOnCurrency=USD&pageOrigin=F..RP.MB.M2
+#
+# Other flights at this date:https://www.kayak.com/flights/NYC-SYD,nearby/2023-03-07/2023-04-10/2adults/children-11-11?fs=bfc=1;cfc=1;stops=-2;layoverdur=-5760;legdur=-7200&sort=bestflight_a
+###
+
+### Flight trip JFK-SYD at 2023-03-07, return SYD-JFK at 2023-04-12, price $1,752 ###
+#
+# Booking link: https://www.kayak.com/book/flight?code=NfEiOsfMY6.eTU9kA5UiVBFj024N3_sTg.175154.2ac0efae2425d87e0ec45de55b4478ff&h=4c6044c499c3&sub=E-163fb6e4daa&numOfBags=1&carryOn=1&carryOnFee=0.00&carryOnCurrency=USD&pageOrigin=F..RP.MB.M4
+#
+# Other flights at this date:https://www.kayak.com/flights/NYC-SYD,nearby/2023-03-07/2023-04-12/2adults/children-11-11?fs=bfc=1;cfc=1;stops=-2;layoverdur=-5760;legdur=-7200&sort=bestflight_a
+###
+
+Done!
+```
+
+</details>
 
 ## Development
 
