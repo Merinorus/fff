@@ -371,6 +371,11 @@ class Bot:
                     pass
             except StaleElementReferenceException as e:
                 logger.exception(e)
+            except IndexError as e:
+                logger.exception(e)
+                logger.error(
+                    "A prolem might have occurred with the date for this flight. Let's pass on this one."
+                )
 
         result.sort(key=lambda x: x.price)
         result = result[0:nb_results]
