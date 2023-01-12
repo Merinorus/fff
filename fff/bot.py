@@ -63,8 +63,22 @@ class UrlGenerator:
             layover_filter=self.layover_filter,
             flight_duration_filter=self.flight_duration_filter,
         )
+        # # Avoid looking for dates in the past
+        if settings.SEARCH_DATE_BEGIN > date.today():
+            search_date_begin = settings.SEARCH_DATE_BEGIN
+        else:
+            search_date_begin = date.today()
+            logger.warning(
+                f"Cannot search a flight from a date in the past ({settings.SEARCH_DATE_BEGIN}). The research will start from today ({search_date_begin})."
+            )
+
+        if settings.SEARCH_DATE_END <= search_date_begin:
+            raise ValueError(
+                f"End of search date ({settings.SEARCH_DATE_END}) should be later than the begin of search date ({search_date_begin}). Please check your settings or env file."
+            )
+
         self.date_tuples = split_date_window(
-            settings.SEARCH_DATE_BEGIN, settings.SEARCH_DATE_END
+            search_date_begin, settings.SEARCH_DATE_END
         )
 
         self.from_airport = AirPort(
